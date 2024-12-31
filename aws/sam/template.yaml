@@ -24,11 +24,14 @@ Resources:
         CatchAll:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /monster/{monster_id}
+            Path: /monsters/{no}
             Method: GET
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
           DYNAMODB_TABLE_NAME: !Ref MonsterRatings
+          MONSTER_SOURCE_DATA_JSON_URL: ""
+          GAME8_MONSTER_URLS_FILE: ""
+          AWS_SAM_LOCAL: ""
       Policies:
         - DynamoDBCrudPolicy:  # LambdaにDynamoDBへのアクセス権限を付与
             TableName: !Ref MonsterRatings
@@ -66,7 +69,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   GetMonsterRatingAPI:
     Description: "API Gateway endpoint URL for Prod environment for First Function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/monster/{monster_id}"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/monsters/{no}"
   GetMonsterRatingFunction:
     Description: "First Lambda Function ARN"
     Value: !GetAtt GetMonsterRatingFunction.Arn

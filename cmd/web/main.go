@@ -1,28 +1,25 @@
 package main
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
+	"github.com/gin-gonic/gin"
+	"github.com/iotassss/puzzdra-monster-rating-v2/internal/handler"
 )
 
-func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	var greeting string
-	sourceIP := request.RequestContext.Identity.SourceIP
-
-	if sourceIP == "" {
-		greeting = "Hello, world!\n"
-	} else {
-		greeting = fmt.Sprintf("Hello, %s!\n", sourceIP)
-	}
-
-	return events.APIGatewayProxyResponse{
-		Body:       greeting,
-		StatusCode: 200,
-	}, nil
-}
-
 func main() {
-	lambda.Start(handler)
+	r := gin.Default()
+	r.LoadHTMLGlob("templates/*.html")
+
+	h := handler.NewHandler(newDynamoDBClient())
+
+	r.GET("/hello", h.HelloHandler)
+	r.GET("/monsters/:no", h.GetMonsterByNoHandler)
+
+	lambda.Start(func(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+		return ginadapter.New(r).Proxy(req)
+	})
 }

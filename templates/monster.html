@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monster Rating</title>
+</head>
+
+<body>
+  <h1>パズドラモンスター 点数一覧</h1>
+  <p>各モンスターについて、各攻略サイトごとの点数をまとめて掲載しています。</p>
+
+  <div>
+    <h2>基本情報</h2>
+    <p><strong>番号:</strong> {{ .No }}</p>
+    <p><strong>名前:</strong> {{ .Name }}</p>
+  </div>
+
+  <div>
+    <h2>Game8</h2>
+    <p>https://game8.jp/では最終進化時の評価を掲載しています。</p>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>名前</th>
+          <th>リーダーポイント</th>
+          <th>サブリーダーポイント</th>
+          <th>アシストポイント</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Game8Monster.Scores }}
+        <tr>
+          <td>{{ .Name }}</td>
+          <td>{{ .LeaderPoint }}</td>
+          <td>{{ .SubLeaderPoint }}</td>
+          <td>{{ .AssistPoint }}</td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+    <p>詳細な情報は<strong><a href="{{ .Game8Monster.URL }}" target="_blank">こちら</a></strong></p>
+  </div>
+
+  <div>
+    <h2>GameWith</h2>
+  </div>
+
+  <div>
+    <h2>AppMedia</h2>
+  </div>
+
+  <div>
+    <h2>アルテマ</h2>
+  </div>
+
+
+</body>
+
+</html>

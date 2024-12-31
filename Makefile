@@ -2,6 +2,7 @@
 
 build:
 	sam build -t ./aws/sam/template.yaml
+	cp -r templates/ .aws-sam/build/GetMonsterRatingFunction/templates/
 
 deploy:
 	sam deploy \
@@ -72,6 +73,6 @@ dynamodb-scan:
 
 # ローカル実行
 local-start-api:
-	sam local start-api
+	sam local start-api --env-vars local.env.json
 local-invoke:
 	sam local invoke GetMonsterRatingFunction --event ./aws/sam/events/event.json
