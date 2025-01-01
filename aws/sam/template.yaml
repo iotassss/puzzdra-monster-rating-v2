@@ -51,7 +51,7 @@ Resources:
           Properties:
             Path: /hello
             Method: GET
-  MonsterRatingTable:
+  MonsterRatings:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: MonsterRatings
