@@ -15,7 +15,7 @@ Resources:
     Metadata:
       BuildMethod: go1.x
     Properties:
-      CodeUri: ../../cmd/web/
+      CodeUri: src/cmd/web/
       Handler: bootstrap
       Runtime: provided.al2023
       Architectures:

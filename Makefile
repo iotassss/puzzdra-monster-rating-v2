@@ -2,8 +2,8 @@
 
 build:
 	rm -rf .aws-sam
-	sam build -t ./aws/sam/template.yaml
-	cp -r templates/ .aws-sam/build/GetMonsterRatingFunction/templates/
+	sam build
+	cp -r src/templates/ .aws-sam/build/GetMonsterRatingFunction/templates/
 
 deploy:
 	sam deploy \
@@ -12,8 +12,7 @@ deploy:
 	--confirm-changeset \
 	--capabilities CAPABILITY_IAM \
 	--no-disable-rollback \
-	--parameter-overrides "GetMonsterRatingFunctionAuth=NONE" \
-	--config-file ./aws/sam/samconfig.toml
+	--parameter-overrides "GetMonsterRatingFunctionAuth=NONE"
 
 # endpointを取得する
 endpoints:
@@ -45,13 +44,13 @@ local-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
 	--endpoint-url http://localhost:8000 \
-	--request-items file://aws/dynamodb/testdata/monster_ratings.json
+	--request-items file://dynamodb/testdata/monster_ratings.json
 
 # dynamodbにテストデータを投入する
 dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
-	--request-items file://aws/dynamodb/testdata/monster_ratings.json
+	--request-items file://dynamodb/testdata/monster_ratings.json
 
 # テストデータ取得
 local-dynamodb-scan:
