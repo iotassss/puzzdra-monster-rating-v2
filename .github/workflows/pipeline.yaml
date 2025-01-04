@@ -1,10 +1,10 @@
 name: Pipeline
 
 on:
-  push:
-    branches:
-      - 'main'
-      - 'develop'
+  # push:
+  #   branches:
+  #     - 'main'
+  #     - 'develop'
   pull_request:
     branches:
       - 'main'
@@ -55,7 +55,9 @@ jobs:
 
       # 依存パッケージのインストール
       - name: Install dependencies
-        run: go mod tidy
+        run: |
+          cd src
+          go mod tidy
 
       # フォーマットの確認 (go fmt & goimports)
       - name: Check formatting
