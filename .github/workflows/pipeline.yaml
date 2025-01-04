@@ -51,16 +51,17 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23.x # 最新のGoバージョンを指定
+          go-version: 1.23.x
 
       # 依存パッケージのインストール
       - name: Install dependencies
+        working-directory: ./src
         run: |
-          cd src
           go mod tidy
 
       # フォーマットの確認 (go fmt & goimports)
       - name: Check formatting
+        working-directory: ./src
         run: |
           go install golang.org/x/tools/cmd/goimports@latest
           fmt_result=$(go fmt ./...)
@@ -74,21 +75,25 @@ jobs:
 
       # 静的解析 (go vet & staticcheck)
       - name: Run go vet
+        working-directory: ./src
         run: go vet ./...
 
       - name: Run staticcheck
         uses: reviewdog/action-staticcheck@v1
         with:
-          workdir: .
+          workdir: ./src
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       # ビルドの確認
       - name: Build
+        working-directory: ./src
         run: go build -v ./...
 
       # テストの実行
       - name: Run tests
+        working-directory: ./src
         run: go test -v ./...
+
 
   build-and-deploy-develop:
     # this stage is triggered only for feature branches (feature*),
