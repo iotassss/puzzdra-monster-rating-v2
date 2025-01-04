@@ -1,10 +1,10 @@
 name: Pipeline
 
 on:
-  # push:
-  #   branches:
-  #     - 'main'
-  #     - 'develop'
+  push:
+    branches:
+      - 'main'
+      - 'develop'
   pull_request:
     branches:
       - 'main'
@@ -100,7 +100,7 @@ jobs:
     # which will build the stack and deploy to a stack named with branch name.
     # https://github.com/actions/setup-python
     # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     needs: [ci]
     runs-on: ubuntu-latest
     steps:
@@ -130,7 +130,7 @@ jobs:
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
 
   build-and-package:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [ci]
     runs-on: ubuntu-latest
     steps:
@@ -164,7 +164,7 @@ jobs:
           path: packaged-prod.yaml
 
   deploy-prod:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [ci]
     runs-on: ubuntu-latest
     # Configure GitHub Action Environment to have a manual approval step before deployment to production
