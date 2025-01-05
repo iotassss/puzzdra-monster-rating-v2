@@ -121,6 +121,7 @@ jobs:
               "https://token.actions.githubusercontent.com/.well-known/openid-configuration" || echo "Failed to fetch token"
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
 
       - uses: aws-actions/setup-sam@v2
         with:
