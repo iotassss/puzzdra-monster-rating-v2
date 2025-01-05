@@ -102,17 +102,28 @@ jobs:
 
   # デバッグ用スベース
   if_merged:
-    if: github.ref == 'refs/heads/develop'
+    if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
       - name: Debug
         run: |
           echo The PR was merged
-          echo "github.event.pull_request.head.ref -> $HOGE"
-          echo "github.ref -> $PIYO"
-        env:
-          HOGE: ${{ github.event.pull_request.head.ref }}
-          PIYO: ${{ github.ref }}
+          echo "github.event.pull_request.head.ref -> ${{ github.event.pull_request.head.ref }}"
+          echo "github.ref -> ${{ github.ref }}"
+      - name: Fetch OIDC Token
+        id: fetch-oidc-token
+        run: |
+          echo "Fetching OIDC token..."
+          curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL" > oidc-token.json
+          echo "OIDC Token JSON:"
+          jq . oidc-token.json
+      - name: Upload Token for Debugging
+        uses: actions/upload-artifact@v3
+        with:
+          name: oidc-token
+          path: oidc-token.json
+
 
 
   # build-and-deploy-develop:
