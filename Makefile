@@ -1,7 +1,8 @@
 .PHONY: build deploy
 
 build:
-	rm -rf .aws-sam
+	cd src && \
+	GOOS=linux GOARCH=amd64 go build -o bootstrap
 	sam build
 	cp -r src/templates/ .aws-sam/build/GetMonsterRatingFunction/templates/
 
