@@ -115,143 +115,143 @@ jobs:
           PIYO: ${{ github.ref }}
 
 
-  build-and-deploy-develop:
-    # tmp
-    permissions:
-      id-token: write
-      contents: read
+  # build-and-deploy-develop:
+  #   # tmp
+  #   permissions:
+  #     id-token: write
+  #     contents: read
 
-    # this stage is triggered only for feature branches (feature*),
-    # which will build the stack and deploy to a stack named with branch name.
-    # https://github.com/actions/setup-python
-    # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
-    if: github.ref == 'refs/heads/develop'
-    needs: [ci]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  #   # this stage is triggered only for feature branches (feature*),
+  #   # which will build the stack and deploy to a stack named with branch name.
+  #   # https://github.com/actions/setup-python
+  #   # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+  #   # if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+  #   if: github.ref == 'refs/heads/develop'
+  #   needs: [ci]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      # OIDC トークンを取得
-      - name: Fetch OIDC Token
-        id: fetch-oidc-token
-        run: |
-          echo "Fetching OIDC token..."
-          curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-              "$ACTIONS_ID_TOKEN_REQUEST_URL" > oidc-token.json
-          echo "OIDC Token JSON:"
-          jq . oidc-token.json # JSON を整形して表示
-        env:
-          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
-          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
-          ACTIONS_STEP_DEBUG: true
-      - name: Upload Token for Debugging
-        uses: actions/upload-artifact@v3
-        with:
-          name: oidc-token
-          path: oidc-token.json
-        env:
-          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
-          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
-      # トークンのデコード
-      - name: Decode and Print OIDC Token
-        run: |
-          echo "Decoding OIDC token payload..."
-          TOKEN=$(jq -r '.id_token' oidc-token.json | cut -d '.' -f2 | base64 -d)
-          echo "Decoded Token Payload:"
-          echo $TOKEN | jq .
-        env:
-          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+  #     # OIDC トークンを取得
+  #     - name: Fetch OIDC Token
+  #       id: fetch-oidc-token
+  #       run: |
+  #         echo "Fetching OIDC token..."
+  #         curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+  #             "$ACTIONS_ID_TOKEN_REQUEST_URL" > oidc-token.json
+  #         echo "OIDC Token JSON:"
+  #         jq . oidc-token.json # JSON を整形して表示
+  #       env:
+  #         ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+  #         ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
+  #         ACTIONS_STEP_DEBUG: true
+  #     - name: Upload Token for Debugging
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: oidc-token
+  #         path: oidc-token.json
+  #       env:
+  #         ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+  #         ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
+  #     # トークンのデコード
+  #     - name: Decode and Print OIDC Token
+  #       run: |
+  #         echo "Decoding OIDC token payload..."
+  #         TOKEN=$(jq -r '.id_token' oidc-token.json | cut -d '.' -f2 | base64 -d)
+  #         echo "Decoded Token Payload:"
+  #         echo $TOKEN | jq .
+  #       env:
+  #         ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
 
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
-      - run: sam build --template ${SAM_TEMPLATE} --use-container
+  #     - uses: aws-actions/setup-sam@v2
+  #       with:
+  #         use-installer: true
+  #     - run: sam build --template ${SAM_TEMPLATE} --use-container
 
-      - name: Assume the testing pipeline user role
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: develop-deployment
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
+  #     - name: Assume the testing pipeline user role
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-region: ${{ env.TESTING_REGION }}
+  #         role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
+  #         role-session-name: develop-deployment
+  #         role-duration-seconds: 3600
+  #         role-skip-session-tagging: true
 
-      - name: Deploy to feature stack in the testing account
-        shell: bash
-        run: |
-          sam deploy --stack-name ${TESTING_STACK_NAME} \
-            --capabilities CAPABILITY_IAM \
-            --region ${TESTING_REGION} \
-            --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
-            --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+  #     - name: Deploy to feature stack in the testing account
+  #       shell: bash
+  #       run: |
+  #         sam deploy --stack-name ${TESTING_STACK_NAME} \
+  #           --capabilities CAPABILITY_IAM \
+  #           --region ${TESTING_REGION} \
+  #           --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
+  #           --no-fail-on-empty-changeset \
+  #           --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
 
-  build-and-package:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [ci]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
+  # build-and-package:
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   needs: [ci]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: aws-actions/setup-sam@v2
+  #       with:
+  #         use-installer: true
 
-      - name: Build resources
-        run: sam build --template ${SAM_TEMPLATE} --use-container
+  #     - name: Build resources
+  #       run: sam build --template ${SAM_TEMPLATE} --use-container
 
-      - name: Assume the prod pipeline user role
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.PROD_REGION }}
-          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: prod-packaging
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
+  #     - name: Assume the prod pipeline user role
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-region: ${{ env.PROD_REGION }}
+  #         role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+  #         role-session-name: prod-packaging
+  #         role-duration-seconds: 3600
+  #         role-skip-session-tagging: true
 
-      - name: Upload artifacts to production artifact buckets
-        run: |
-          sam package \
-            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-            --region ${PROD_REGION} \
-            --output-template-file packaged-prod.yaml
+  #     - name: Upload artifacts to production artifact buckets
+  #       run: |
+  #         sam package \
+  #           --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+  #           --region ${PROD_REGION} \
+  #           --output-template-file packaged-prod.yaml
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: packaged-prod.yaml
-          path: packaged-prod.yaml
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: packaged-prod.yaml
+  #         path: packaged-prod.yaml
 
-  deploy-prod:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [ci]
-    runs-on: ubuntu-latest
-    # Configure GitHub Action Environment to have a manual approval step before deployment to production
-    # https://docs.github.com/en/actions/reference/environments
-    # environment: <configured-environment>
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
-      - uses: actions/download-artifact@v4
-        with:
-          name: packaged-prod.yaml
+  # deploy-prod:
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   needs: [ci]
+  #   runs-on: ubuntu-latest
+  #   # Configure GitHub Action Environment to have a manual approval step before deployment to production
+  #   # https://docs.github.com/en/actions/reference/environments
+  #   # environment: <configured-environment>
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: aws-actions/setup-sam@v2
+  #       with:
+  #         use-installer: true
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: packaged-prod.yaml
 
-      - name: Assume the prod pipeline user role
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.PROD_REGION }}
-          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: prod-deployment
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
+  #     - name: Assume the prod pipeline user role
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-region: ${{ env.PROD_REGION }}
+  #         role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+  #         role-session-name: prod-deployment
+  #         role-duration-seconds: 3600
+  #         role-skip-session-tagging: true
 
-      - name: Deploy to production account
-        run: |
-          sam deploy --stack-name ${PROD_STACK_NAME} \
-            --template packaged-prod.yaml \
-            --capabilities CAPABILITY_IAM \
-            --region ${PROD_REGION} \
-            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-            --no-fail-on-empty-changeset \
-            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE}
+  #     - name: Deploy to production account
+  #       run: |
+  #         sam deploy --stack-name ${PROD_STACK_NAME} \
+  #           --template packaged-prod.yaml \
+  #           --capabilities CAPABILITY_IAM \
+  #           --region ${PROD_REGION} \
+  #           --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+  #           --no-fail-on-empty-changeset \
+  #           --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE}
