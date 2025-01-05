@@ -109,7 +109,7 @@ jobs:
     needs: [ci]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # OIDC トークンを取得
       - name: Fetch OIDC Token
@@ -124,7 +124,14 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
           ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
           ACTIONS_STEP_DEBUG: true
-
+      - name: Upload Token for Debugging
+        uses: actions/upload-artifact@v3
+        with:
+          name: oidc-token
+          path: oidc-token.json
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
       # トークンのデコード
       - name: Decode and Print OIDC Token
         run: |
