@@ -105,6 +105,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      # Debugging OIDC token
+      - name: Debug OIDC Token
+        run: |
+          echo "Debugging OIDC token..."
+          curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "https://token.actions.githubusercontent.com/.well-known/openid-configuration" || echo "Failed to fetch token"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
