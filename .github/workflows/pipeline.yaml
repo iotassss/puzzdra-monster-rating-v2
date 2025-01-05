@@ -110,17 +110,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       # OIDC トークンを取得
       - name: Fetch OIDC Token
         id: fetch-oidc-token
         run: |
           echo "Fetching OIDC token..."
           curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-               "$ACTIONS_ID_TOKEN_REQUEST_URL" > oidc-token.json
-          cat oidc-token.json
+              "$ACTIONS_ID_TOKEN_REQUEST_URL" > oidc-token.json
+          echo "OIDC Token JSON:"
+          jq . oidc-token.json # JSON を整形して表示
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
           ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
+          ACTIONS_STEP_DEBUG: true
 
       # トークンのデコード
       - name: Decode and Print OIDC Token
