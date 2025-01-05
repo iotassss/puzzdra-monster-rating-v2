@@ -105,13 +105,13 @@ jobs:
     # if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-    - run: |
-        echo The PR was merged
-        echo "github.event.pull_request.head.ref -> $HOGE"
-        echo "github.ref -> $PIYO"
-      env:
-        HOGE: ${{ github.event.pull_request.head.ref }}
-        PIYO: ${{ github.ref }}
+      - run: |
+          echo The PR was merged
+          echo "github.event.pull_request.head.ref -> $HOGE"
+          echo "github.ref -> $PIYO"
+        env:
+          HOGE: ${{ github.event.pull_request.head.ref }}
+          PIYO: ${{ github.ref }}
 
 
   build-and-deploy-develop:
