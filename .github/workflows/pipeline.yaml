@@ -114,6 +114,14 @@ jobs:
               "https://token.actions.githubusercontent.com/.well-known/openid-configuration" || echo "Failed to fetch token"
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+      # Fetching OIDC token
+      - name: Print OIDC Token
+        run: |
+          echo "Fetching OIDC token..."
+          curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              https://token.actions.githubusercontent.com/.well-known/openid-configuration
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
 
       - uses: aws-actions/setup-sam@v2
         with:
