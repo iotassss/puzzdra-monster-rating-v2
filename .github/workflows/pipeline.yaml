@@ -96,6 +96,11 @@ jobs:
 
 
   build-and-deploy-develop:
+    # tmp
+    permissions:
+      id-token: write
+      contents: read
+
     # this stage is triggered only for feature branches (feature*),
     # which will build the stack and deploy to a stack named with branch name.
     # https://github.com/actions/setup-python
@@ -114,15 +119,6 @@ jobs:
               "https://token.actions.githubusercontent.com/.well-known/openid-configuration" || echo "Failed to fetch token"
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
-      # Fetching and printing OIDC token
-      - name: Fetch and print OIDC Token
-        run: |
-          echo "Fetching and decoding OIDC token..."
-          curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-              https://api.github.com/actions/oidc/token | jq .
-        env:
-          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
-
 
       - uses: aws-actions/setup-sam@v2
         with:
