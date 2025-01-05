@@ -105,7 +105,8 @@ jobs:
     # which will build the stack and deploy to a stack named with branch name.
     # https://github.com/actions/setup-python
     # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs: [ci]
     runs-on: ubuntu-latest
     steps:
