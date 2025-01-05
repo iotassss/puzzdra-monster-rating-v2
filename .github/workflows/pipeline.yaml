@@ -94,6 +94,18 @@ jobs:
         working-directory: ./src
         run: go test -v ./...
 
+  # デバッグ用スベース
+  debug:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Hello
+        run: |
+          echo "Hello, World!"
+
 
   build-and-deploy-develop:
     # tmp
