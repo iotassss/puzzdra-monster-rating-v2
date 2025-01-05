@@ -102,6 +102,7 @@ jobs:
 
   # デバッグ用スベース
   if_merged:
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
       - name: Debug
