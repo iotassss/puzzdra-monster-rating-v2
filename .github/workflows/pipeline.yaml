@@ -132,7 +132,6 @@ jobs:
   #         role-duration-seconds: 3600
   #         role-skip-session-tagging: true
 
-
   build-and-deploy-develop:
     # tmp
     permissions:
@@ -152,26 +151,51 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      - run: sam build --template ${SAM_TEMPLATE} --use-container
+      - run: |
+          sam build --template ${SAM_TEMPLATE} --use-container
+          ls -al
 
-      - name: Assume the testing pipeline user role
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: develop-deployment
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
+  # build-and-deploy-develop:
+  #   # tmp
+  #   permissions:
+  #     id-token: write
+  #     contents: read
 
-      - name: Deploy to feature stack in the testing account
-        shell: bash
-        run: |
-          sam deploy --stack-name ${TESTING_STACK_NAME} \
-            --capabilities CAPABILITY_IAM \
-            --region ${TESTING_REGION} \
-            --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
-            --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+  #   # this stage is triggered only for feature branches (feature*),
+  #   # which will build the stack and deploy to a stack named with branch name.
+  #   # https://github.com/actions/setup-python
+  #   # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+  #   # if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+  #   if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
+  #   # needs: [ci]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: aws-actions/setup-sam@v2
+  #       with:
+  #         use-installer: true
+  #     - run: |
+  #         sam build --template ${SAM_TEMPLATE} --use-container
+  #         ls -al
+
+  #     - name: Assume the testing pipeline user role
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-region: ${{ env.TESTING_REGION }}
+  #         role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
+  #         role-session-name: develop-deployment
+  #         role-duration-seconds: 3600
+  #         role-skip-session-tagging: true
+
+  #     - name: Deploy to feature stack in the testing account
+  #       shell: bash
+  #       run: |
+  #         sam deploy --stack-name ${TESTING_STACK_NAME} \
+  #           --capabilities CAPABILITY_IAM \
+  #           --region ${TESTING_REGION} \
+  #           --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
+  #           --no-fail-on-empty-changeset \
+  #           --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
 
   # build-and-package:
   #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
