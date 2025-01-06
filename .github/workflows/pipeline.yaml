@@ -153,7 +153,12 @@ jobs:
           use-installer: true
       - run: |
           sam build --template ${SAM_TEMPLATE} --use-container
-          ls -al
+          ls -al > ls-al.txt
+      - name: Upload Token for Debugging
+        uses: actions/upload-artifact@v3
+        with:
+          name: ls-al
+          path: ls-al.txt
 
   # build-and-deploy-develop:
   #   # tmp
