@@ -40,10 +40,10 @@ Resources:
     Properties:
       TableName: MonsterRatings
       AttributeDefinitions:
-        - AttributeName: No
+        - AttributeName: "No"
           AttributeType: S
       KeySchema:
-        - AttributeName: No
+        - AttributeName: "No"
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
