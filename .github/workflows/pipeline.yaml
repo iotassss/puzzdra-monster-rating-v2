@@ -100,92 +100,29 @@ jobs:
   #       working-directory: ./src
   #       run: go test -v ./...
 
-  # デバッグ用スベース
-  if_merged:
-    if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug
-        run: |
-          echo The PR was merged
-          echo "github.event.pull_request.head.ref -> ${{ github.event.pull_request.head.ref }}"
-          echo "github.ref -> ${{ github.ref }}"
-      - name: Fetch OIDC Token
-        id: fetch-oidc-token
-        run: |
-          echo "Fetching OIDC token..."
-          curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" > oidc-token.json
-          echo "OIDC Token JSON:"
-          jq . oidc-token.json
-      - name: Upload Token for Debugging
-        uses: actions/upload-artifact@v3
-        with:
-          name: oidc-token
-          path: oidc-token.json
-      - name: Assume the testing pipeline user role
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: develop-deployment
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
-
-
-  # build-and-deploy-develop:
-  #   # tmp
-  #   permissions:
-  #     id-token: write
-  #     contents: read
-
-  #   # this stage is triggered only for feature branches (feature*),
-  #   # which will build the stack and deploy to a stack named with branch name.
-  #   # https://github.com/actions/setup-python
-  #   # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
-  #   # if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
-  #   if: github.ref == 'refs/heads/develop'
-  #   needs: [ci]
+  # # デバッグ用スベース
+  # if_merged:
+  #   if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     # OIDC トークンを取得
+  #     - name: Debug
+  #       run: |
+  #         echo The PR was merged
+  #         echo "github.event.pull_request.head.ref -> ${{ github.event.pull_request.head.ref }}"
+  #         echo "github.ref -> ${{ github.ref }}"
   #     - name: Fetch OIDC Token
   #       id: fetch-oidc-token
   #       run: |
   #         echo "Fetching OIDC token..."
   #         curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-  #             "$ACTIONS_ID_TOKEN_REQUEST_URL" > oidc-token.json
+  #             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" > oidc-token.json
   #         echo "OIDC Token JSON:"
-  #         jq . oidc-token.json # JSON を整形して表示
-  #       env:
-  #         ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
-  #         ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
-  #         ACTIONS_STEP_DEBUG: true
+  #         jq . oidc-token.json
   #     - name: Upload Token for Debugging
   #       uses: actions/upload-artifact@v3
   #       with:
   #         name: oidc-token
   #         path: oidc-token.json
-  #       env:
-  #         ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
-  #         ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
-  #     # トークンのデコード
-  #     - name: Decode and Print OIDC Token
-  #       run: |
-  #         echo "Decoding OIDC token payload..."
-  #         TOKEN=$(jq -r '.id_token' oidc-token.json | cut -d '.' -f2 | base64 -d)
-  #         echo "Decoded Token Payload:"
-  #         echo $TOKEN | jq .
-  #       env:
-  #         ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
-
-  #     - uses: aws-actions/setup-sam@v2
-  #       with:
-  #         use-installer: true
-  #     - run: sam build --template ${SAM_TEMPLATE} --use-container
-
   #     - name: Assume the testing pipeline user role
   #       uses: aws-actions/configure-aws-credentials@v4
   #       with:
@@ -195,15 +132,46 @@ jobs:
   #         role-duration-seconds: 3600
   #         role-skip-session-tagging: true
 
-  #     - name: Deploy to feature stack in the testing account
-  #       shell: bash
-  #       run: |
-  #         sam deploy --stack-name ${TESTING_STACK_NAME} \
-  #           --capabilities CAPABILITY_IAM \
-  #           --region ${TESTING_REGION} \
-  #           --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
-  #           --no-fail-on-empty-changeset \
-  #           --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+
+  build-and-deploy-develop:
+    # tmp
+    permissions:
+      id-token: write
+      contents: read
+
+    # this stage is triggered only for feature branches (feature*),
+    # which will build the stack and deploy to a stack named with branch name.
+    # https://github.com/actions/setup-python
+    # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
+    # needs: [ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - run: sam build --template ${SAM_TEMPLATE} --use-container
+
+      - name: Assume the testing pipeline user role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.TESTING_REGION }}
+          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: develop-deployment
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Deploy to feature stack in the testing account
+        shell: bash
+        run: |
+          sam deploy --stack-name ${TESTING_STACK_NAME} \
+            --capabilities CAPABILITY_IAM \
+            --region ${TESTING_REGION} \
+            --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
+            --no-fail-on-empty-changeset \
+            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
 
   # build-and-package:
   #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
