@@ -1,0 +1,8 @@
+.env
+bin/
+data/
+TODO
+app.log
+.vscode/
+.aws-sam/
+local.env.json

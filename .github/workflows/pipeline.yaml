@@ -1,0 +1,246 @@
+name: Pipeline
+
+on:
+  # push:
+  #   branches:
+  #     - 'main'
+  #     - 'develop'
+  pull_request:
+    types:
+      - closed
+    branches:
+      - 'main'
+      - 'develop'
+  # pull_request:
+  #   branches:
+      # - 'main'
+      # - 'develop'
+      # - 'feature**'
+  # delete:
+  #   branches:
+  #     - 'feature**'
+
+env:
+  SAM_TEMPLATE: template.yaml
+  TESTING_STACK_NAME: puzzdra-sam-dev
+  TESTING_PIPELINE_EXECUTION_ROLE: arn:aws:iam::891377022391:role/aws-sam-cli-managed-dev-pipel-PipelineExecutionRole-0rhx2ZG6lbqn
+  TESTING_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::891377022391:role/aws-sam-cli-managed-dev-p-CloudFormationExecutionRo-26PyQAhrZyZ5
+  TESTING_ARTIFACTS_BUCKET: aws-sam-cli-managed-dev-pipeline-r-artifactsbucket-ujgdjognoedg
+  # If there are functions with "Image" PackageType in your template,
+  # uncomment the line below and add "--image-repository ${TESTING_IMAGE_REPOSITORY}" to
+  # testing "sam package" and "sam deploy" commands.
+  # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
+  TESTING_REGION: ap-northeast-1
+  PROD_STACK_NAME: puzzdra-sam-prod
+  PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::891377022391:role/aws-sam-cli-managed-prod-pipe-PipelineExecutionRole-A5X60QAV13We
+  PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::891377022391:role/aws-sam-cli-managed-prod--CloudFormationExecutionRo-ks7iS3OanoOu
+  PROD_ARTIFACTS_BUCKET: aws-sam-cli-managed-prod-pipeline--artifactsbucket-rqhevjj3b7as
+  # If there are functions with "Image" PackageType in your template,
+  # uncomment the line below and add "--image-repository ${PROD_IMAGE_REPOSITORY}" to
+  # prod "sam package" and "sam deploy" commands.
+  # PROD_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
+  PROD_REGION: ap-northeast-1
+
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  # ci:
+  #   if: github.event_name == 'pull_request'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # リポジトリをチェックアウト
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     # Goのセットアップ
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version: 1.23.x
+
+  #     # 依存パッケージのインストール
+  #     - name: Install dependencies
+  #       working-directory: ./src
+  #       run: |
+  #         go mod tidy
+
+  #     # フォーマットの確認 (go fmt & goimports)
+  #     - name: Check formatting
+  #       working-directory: ./src
+  #       run: |
+  #         go install golang.org/x/tools/cmd/goimports@latest
+  #         fmt_result=$(go fmt ./...)
+  #         imports_result=$(goimports -l .)
+  #         if [ -n "$fmt_result" ] || [ -n "$imports_result" ]; then
+  #           echo "Formatting issues found:"
+  #           echo "$fmt_result"
+  #           echo "$imports_result"
+  #           exit 1
+  #         fi
+
+  #     # 静的解析 (go vet & staticcheck)
+  #     - name: Run go vet
+  #       working-directory: ./src
+  #       run: go vet ./...
+
+  #     - name: Run staticcheck
+  #       uses: reviewdog/action-staticcheck@v1
+  #       with:
+  #         workdir: ./src
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  #     # ビルドの確認
+  #     - name: Build
+  #       working-directory: ./src
+  #       run: go build -v ./...
+
+  #     # テストの実行
+  #     - name: Run tests
+  #       working-directory: ./src
+  #       run: go test -v ./...
+
+  # # デバッグ用スベース
+  # if_merged:
+  #   if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Debug
+  #       run: |
+  #         echo The PR was merged
+  #         echo "github.event.pull_request.head.ref -> ${{ github.event.pull_request.head.ref }}"
+  #         echo "github.ref -> ${{ github.ref }}"
+  #     - name: Fetch OIDC Token
+  #       id: fetch-oidc-token
+  #       run: |
+  #         echo "Fetching OIDC token..."
+  #         curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+  #             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" > oidc-token.json
+  #         echo "OIDC Token JSON:"
+  #         jq . oidc-token.json
+  #     - name: Upload Token for Debugging
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: oidc-token
+  #         path: oidc-token.json
+  #     - name: Assume the testing pipeline user role
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-region: ${{ env.TESTING_REGION }}
+  #         role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
+  #         role-session-name: develop-deployment
+  #         role-duration-seconds: 3600
+  #         role-skip-session-tagging: true
+
+  build-and-deploy-develop:
+    # tmp
+    permissions:
+      id-token: write
+      contents: read
+
+    # this stage is triggered only for feature branches (feature*),
+    # which will build the stack and deploy to a stack named with branch name.
+    # https://github.com/actions/setup-python
+    # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
+    # needs: [ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - run: |
+          sam build --template ${SAM_TEMPLATE} --use-container
+          cp -r src/templates/ .aws-sam/build/GetMonsterRatingFunction/templates/
+
+      - name: Assume the testing pipeline user role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.TESTING_REGION }}
+          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: develop-deployment
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Deploy to feature stack in the testing account
+        shell: bash
+        run: |
+          sam deploy --stack-name ${TESTING_STACK_NAME} \
+            --capabilities CAPABILITY_IAM \
+            --region ${TESTING_REGION} \
+            --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
+            --no-fail-on-empty-changeset \
+            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+
+  build-and-package:
+    if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
+    # needs: [ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Build resources
+        run: |
+          sam build --template ${SAM_TEMPLATE} --use-container
+          cp -r src/templates/ .aws-sam/build/GetMonsterRatingFunction/templates/
+
+      - name: Assume the prod pipeline user role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.PROD_REGION }}
+          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: prod-packaging
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Upload artifacts to production artifact buckets
+        run: |
+          sam package \
+            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+            --region ${PROD_REGION} \
+            --output-template-file packaged-prod.yaml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packaged-prod.yaml
+          path: packaged-prod.yaml
+
+  deploy-prod:
+    if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
+    # needs: [ci]
+    runs-on: ubuntu-latest
+    # Configure GitHub Action Environment to have a manual approval step before deployment to production
+    # https://docs.github.com/en/actions/reference/environments
+    # environment: <configured-environment>
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: packaged-prod.yaml
+
+      - name: Assume the prod pipeline user role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.PROD_REGION }}
+          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: prod-deployment
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Deploy to production account
+        run: |
+          sam deploy --stack-name ${PROD_STACK_NAME} \
+            --template packaged-prod.yaml \
+            --capabilities CAPABILITY_IAM \
+            --region ${PROD_REGION} \
+            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+            --no-fail-on-empty-changeset \
+            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE}
