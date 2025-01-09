@@ -9,6 +9,15 @@ Globals:
     Timeout: 5
     MemorySize: 128
 
+# custom
+Parameters:
+  Env:
+    Type: String
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - Prd
+
 Resources:
   GetMonsterRatingFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -38,7 +47,7 @@ Resources:
   MonsterRatings:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: MonsterRatings
+      TableName: !Sub "${Env}MonsterRatings"
       AttributeDefinitions:
         - AttributeName: "No"
           AttributeType: S

@@ -31,13 +31,13 @@ warm_containers = "EAGER"
 warm_containers = "EAGER"
 
 [dev.deploy.parameters]
-parameter_overrides = ["Env=dev"]
+parameter_overrides = ["Env=Dev"]
 
 [dev.local_invoke.parameters]
-parameter_overrides = ["Env=dev"]
+parameter_overrides = ["Env=Dev"]
 
 [stg.deploy.parameters]
 parameter_overrides = ["Env=stg"]
 
 [prd.deploy.parameters]
-parameter_overrides = ["Env=prd"]
+parameter_overrides = ["Env=Prd"]
