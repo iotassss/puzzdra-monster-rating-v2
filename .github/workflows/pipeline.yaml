@@ -239,9 +239,18 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy to production account
+        # run: |
+        #   sam deploy --stack-name ${PROD_STACK_NAME} \
+        #     --config-env prd \
+        #     --template packaged-prod.yaml \
+        #     --capabilities CAPABILITY_IAM \
+        #     --region ${PROD_REGION} \
+        #     --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+        #     --no-fail-on-empty-changeset \
+        #     --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE}
         run: |
           sam deploy --stack-name ${PROD_STACK_NAME} \
-            --config-env prd \
+             --parameter-overrides Env=Prd \
             --template packaged-prod.yaml \
             --capabilities CAPABILITY_IAM \
             --region ${PROD_REGION} \
