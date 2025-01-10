@@ -199,28 +199,17 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
-      # - name: Upload artifacts to production artifact buckets
-      #   run: |
-      #     sam package \
-      #       --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-      #       --region ${PROD_REGION} \
-      #       --output-template-file packaged-prod.yaml
-
-      # - uses: actions/upload-artifact@v4
-      #   with:
-      #     name: packaged-prod.yaml
-      #     path: packaged-prod.yaml
       - name: Upload artifacts to production artifact buckets
         run: |
           sam package \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
             --region ${PROD_REGION} \
-            --output-template-file template.yaml
+            --output-template-file packaged-prod.yaml
 
       - uses: actions/upload-artifact@v4
         with:
-          name: template.yaml
-          path: template.yaml
+          name: packaged-prod.yaml
+          path: packaged-prod.yaml
 
   deploy-prod:
     if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
@@ -236,12 +225,9 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      # - uses: actions/download-artifact@v4
-      #   with:
-      #     name: packaged-prod.yaml
       - uses: actions/download-artifact@v4
         with:
-          name: template.yaml
+          name: packaged-prod.yaml
 
       - name: Assume the prod pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
@@ -253,19 +239,10 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy to production account
-        # run: |
-        #   sam deploy --stack-name ${PROD_STACK_NAME} \
-        #     --config-env prd \
-        #     --template packaged-prod.yaml \
-        #     --capabilities CAPABILITY_IAM \
-        #     --region ${PROD_REGION} \
-        #     --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-        #     --no-fail-on-empty-changeset \
-        #     --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE}
         run: |
           sam deploy --stack-name ${PROD_STACK_NAME} \
-             --parameter-overrides Env=Prd \
-            --template template.yaml \
+            --config-env prd \
+            --template packaged-prod.yaml \
             --capabilities CAPABILITY_IAM \
             --region ${PROD_REGION} \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
