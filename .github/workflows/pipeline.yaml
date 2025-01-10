@@ -199,17 +199,28 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
+      # - name: Upload artifacts to production artifact buckets
+      #   run: |
+      #     sam package \
+      #       --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+      #       --region ${PROD_REGION} \
+      #       --output-template-file packaged-prod.yaml
+
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     name: packaged-prod.yaml
+      #     path: packaged-prod.yaml
       - name: Upload artifacts to production artifact buckets
         run: |
           sam package \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
             --region ${PROD_REGION} \
-            --output-template-file packaged-prod.yaml
+            --output-template-file template.yaml
 
       - uses: actions/upload-artifact@v4
         with:
-          name: packaged-prod.yaml
-          path: packaged-prod.yaml
+          name: template.yaml
+          path: template.yaml
 
   deploy-prod:
     if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
