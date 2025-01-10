@@ -13,7 +13,7 @@ Globals:
 Parameters:
   Env:
     Type: String
-    Default: Dev
+    Default: Prd
     AllowedValues:
       - Dev
       - Prd
