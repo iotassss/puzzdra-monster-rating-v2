@@ -50,7 +50,7 @@ permissions:
 jobs:
   ci:
     # featureブランチに対してのみ実行されるステージ
-    if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'feature/')
+    if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'feature/') && github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
