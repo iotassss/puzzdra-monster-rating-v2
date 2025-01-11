@@ -8,6 +8,8 @@ on:
   pull_request:
     types:
       - closed
+      - synchronize
+      - opened
     branches:
       - 'main'
       - 'develop'
@@ -31,6 +33,7 @@ env:
   # testing "sam package" and "sam deploy" commands.
   # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   TESTING_REGION: ap-northeast-1
+  PROD_SAM_TEMPLATE: packaged-prod.yaml
   PROD_STACK_NAME: puzzdra-sam-prod
   PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::891377022391:role/aws-sam-cli-managed-prod-pipe-PipelineExecutionRole-A5X60QAV13We
   PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::891377022391:role/aws-sam-cli-managed-prod--CloudFormationExecutionRo-ks7iS3OanoOu
@@ -45,106 +48,62 @@ permissions:
   id-token: write
   contents: read
 jobs:
-  # ci:
-  #   if: github.event_name == 'pull_request'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     # リポジトリをチェックアウト
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+  ci:
+    # featureブランチに対してのみ実行されるステージ
+    if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'feature/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.x
+      - name: Install dependencies
+        working-directory: ./src
+        run: |
+          go mod tidy
 
-  #     # Goのセットアップ
-  #     - name: Set up Go
-  #       uses: actions/setup-go@v5
-  #       with:
-  #         go-version: 1.23.x
+      # フォーマットの確認 (go fmt & goimports)
+      - name: Check formatting
+        working-directory: ./src
+        run: |
+          go install golang.org/x/tools/cmd/goimports@latest
+          fmt_result=$(go fmt ./...)
+          imports_result=$(goimports -l .)
+          if [ -n "$fmt_result" ] || [ -n "$imports_result" ]; then
+            echo "Formatting issues found:"
+            echo "$fmt_result"
+            echo "$imports_result"
+            exit 1
+          fi
 
-  #     # 依存パッケージのインストール
-  #     - name: Install dependencies
-  #       working-directory: ./src
-  #       run: |
-  #         go mod tidy
+      # 静的解析 (go vet & staticcheck)
+      - name: Run go vet
+        working-directory: ./src
+        run: go vet ./...
+      - name: Run staticcheck
+        uses: reviewdog/action-staticcheck@v1
+        with:
+          workdir: ./src
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-  #     # フォーマットの確認 (go fmt & goimports)
-  #     - name: Check formatting
-  #       working-directory: ./src
-  #       run: |
-  #         go install golang.org/x/tools/cmd/goimports@latest
-  #         fmt_result=$(go fmt ./...)
-  #         imports_result=$(goimports -l .)
-  #         if [ -n "$fmt_result" ] || [ -n "$imports_result" ]; then
-  #           echo "Formatting issues found:"
-  #           echo "$fmt_result"
-  #           echo "$imports_result"
-  #           exit 1
-  #         fi
+      # ビルドの確認
+      - name: Build
+        working-directory: ./src
+        run: go build -v ./...
 
-  #     # 静的解析 (go vet & staticcheck)
-  #     - name: Run go vet
-  #       working-directory: ./src
-  #       run: go vet ./...
-
-  #     - name: Run staticcheck
-  #       uses: reviewdog/action-staticcheck@v1
-  #       with:
-  #         workdir: ./src
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-
-  #     # ビルドの確認
-  #     - name: Build
-  #       working-directory: ./src
-  #       run: go build -v ./...
-
-  #     # テストの実行
-  #     - name: Run tests
-  #       working-directory: ./src
-  #       run: go test -v ./...
-
-  # # デバッグ用スベース
-  # if_merged:
-  #   if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Debug
-  #       run: |
-  #         echo The PR was merged
-  #         echo "github.event.pull_request.head.ref -> ${{ github.event.pull_request.head.ref }}"
-  #         echo "github.ref -> ${{ github.ref }}"
-  #     - name: Fetch OIDC Token
-  #       id: fetch-oidc-token
-  #       run: |
-  #         echo "Fetching OIDC token..."
-  #         curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-  #             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" > oidc-token.json
-  #         echo "OIDC Token JSON:"
-  #         jq . oidc-token.json
-  #     - name: Upload Token for Debugging
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: oidc-token
-  #         path: oidc-token.json
-  #     - name: Assume the testing pipeline user role
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         aws-region: ${{ env.TESTING_REGION }}
-  #         role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-  #         role-session-name: develop-deployment
-  #         role-duration-seconds: 3600
-  #         role-skip-session-tagging: true
+      # テストの実行
+      - name: Run tests
+        working-directory: ./src
+        run: go test -v ./...
 
   build-and-deploy-develop:
-    # tmp
-    permissions:
-      id-token: write
-      contents: read
-
     # this stage is triggered only for feature branches (feature*),
     # which will build the stack and deploy to a stack named with branch name.
     # https://github.com/actions/setup-python
     # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
     if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
-    # needs: [ci]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -177,7 +136,6 @@ jobs:
 
   build-and-package:
     if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
-    # needs: [ci]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -213,8 +171,6 @@ jobs:
 
   deploy-prod:
     if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
-    # needs: [ci]
-    # needs: [ci, build-and-package]
     needs: [build-and-package]
     runs-on: ubuntu-latest
     # Configure GitHub Action Environment to have a manual approval step before deployment to production
