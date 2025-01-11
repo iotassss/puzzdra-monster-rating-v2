@@ -8,6 +8,8 @@ on:
   pull_request:
     types:
       - closed
+      - synchronize
+      - opened
     branches:
       - 'main'
       - 'develop'
@@ -47,7 +49,8 @@ permissions:
   contents: read
 jobs:
   ci:
-    if: github.event_name == 'pull_request'
+    # featureブランチに対してのみ実行されるステージ
+    if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'feature/') && github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -101,7 +104,6 @@ jobs:
     # https://github.com/actions/setup-python
     # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
     if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
-    needs: [ci]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -134,7 +136,6 @@ jobs:
 
   build-and-package:
     if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
-    needs: [ci]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -170,7 +171,7 @@ jobs:
 
   deploy-prod:
     if: github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
-    needs: [ci, build-and-package]
+    needs: [build-and-package]
     runs-on: ubuntu-latest
     # Configure GitHub Action Environment to have a manual approval step before deployment to production
     # https://docs.github.com/en/actions/reference/environments
