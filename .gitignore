@@ -6,3 +6,4 @@ app.log
 .vscode/
 .aws-sam/
 local.env.json
+bootstrap
