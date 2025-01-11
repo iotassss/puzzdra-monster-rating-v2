@@ -9,6 +9,7 @@ on:
     types:
       - closed
       - synchronize
+      - opened
     branches:
       - 'main'
       - 'develop'
@@ -48,7 +49,7 @@ permissions:
   contents: read
 jobs:
   ci:
-    if: github.event_name == 'pull_request' && github.event.action == 'synchronize' && startsWith(github.ref, 'refs/heads/feature')
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && startsWith(github.ref, 'refs/heads/feature')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
