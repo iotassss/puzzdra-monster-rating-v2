@@ -241,7 +241,6 @@ jobs:
 
       - name: Deploy to production account
         run: |
-          ls -al > ls.txt
           sam deploy --stack-name ${PROD_STACK_NAME} \
             --config-env prd \
             --template packaged-prod.yaml \
