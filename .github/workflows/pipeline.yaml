@@ -31,6 +31,7 @@ env:
   # testing "sam package" and "sam deploy" commands.
   # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   TESTING_REGION: ap-northeast-1
+  PROD_SAM_TEMPLATE: packaged-prod.yaml
   PROD_STACK_NAME: puzzdra-sam-prod
   PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::891377022391:role/aws-sam-cli-managed-prod-pipe-PipelineExecutionRole-A5X60QAV13We
   PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::891377022391:role/aws-sam-cli-managed-prod--CloudFormationExecutionRo-ks7iS3OanoOu
@@ -187,7 +188,7 @@ jobs:
 
       - name: Build resources
         run: |
-          sam build --template ${SAM_TEMPLATE} --use-container
+          sam build --template ${PROD_SAM_TEMPLATE} --use-container
           cp -r src/templates/ .aws-sam/build/GetMonsterRatingFunction/templates/
 
       - name: Assume the prod pipeline user role
