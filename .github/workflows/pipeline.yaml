@@ -188,7 +188,7 @@ jobs:
 
       - name: Build resources
         run: |
-          sam build --template ${PROD_SAM_TEMPLATE} --use-container
+          sam build --template ${SAM_TEMPLATE} --use-container
           cp -r src/templates/ .aws-sam/build/GetMonsterRatingFunction/templates/
 
       - name: Assume the prod pipeline user role
