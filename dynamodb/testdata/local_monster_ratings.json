@@ -1,0 +1,80 @@
+{
+	"LocalMonsterRatings": [
+		{
+			"PutRequest": {
+				"Item": {
+					"No": {
+						"S": "12345"
+					},
+					"Name": {
+						"S": "ルクシェオン"
+					},
+					"OriginMonsterNo": {
+						"N": "10000"
+					},
+					"Game8URL": {
+						"S": "https://game8.jp/pazudora/645084"
+					},
+					"Game8Scores": {
+						"L": [
+							{
+								"M": {
+									"Name": {"S": "転生ルクシェオン"},
+									"LeaderPoint": {"S": "9.5"},
+									"SubPoint": {"S": "9.5"},
+									"AssistPoint": {"S": "6.0"}
+								}
+							},
+							{
+								"M": {
+									"Name": {"S": "ルクシェオン＆オブリヴィオン"},
+									"LeaderPoint": {"S": "6.0"},
+									"SubPoint": {"S": "5.5"},
+									"AssistPoint": {"S": "5.0"}
+								}
+							}
+						]
+					}
+				}
+			}
+		},
+		{
+			"PutRequest": {
+				"Item": {
+					"No": {
+						"S": "12346"
+					},
+					"Name": {
+						"S": "ヴァルトランス"
+					},
+					"OriginMonsterNo": {
+						"N": "10010"
+					},
+					"Game8URL": {
+						"S": "https://game8.jp/pazudora/645085"
+					},
+					"Game8Scores": {
+						"L": [
+							{
+								"M": {
+									"Name": {
+										"S": "鋼の騎士・ヴァルトランス"
+									},
+									"LeaderPoint": {
+										"S": "8.0"
+									},
+									"SubPoint": {
+										"S": "9.9"
+									},
+									"AssistPoint": {
+										"S": "6.0"
+									}
+								}
+							}
+						]
+					}
+				}
+			}
+		}
+	]
+}

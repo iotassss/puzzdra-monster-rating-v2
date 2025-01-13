@@ -14,9 +14,9 @@ Parameters:
   Env:
     Type: String
     Default: Dev
-    # AllowedValues:
-    #   - Dev
-    #   - Prd
+    AllowedValues:
+      - Dev
+      - Prd
 
 Resources:
   GetMonsterRatingFunction:
