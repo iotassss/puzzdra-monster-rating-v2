@@ -34,7 +34,7 @@ local-invoke:
 # ローカルでDynamoDBを起動する
 local-dynamodb-table:
 	aws dynamodb create-table \
-		--table-name MonsterRatings \
+		--table-name LocalMonsterRatings \
 		--attribute-definitions AttributeName=No,AttributeType=S \
 		--key-schema AttributeName=No,KeyType=HASH \
 		--provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
@@ -45,13 +45,19 @@ local-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
 	--endpoint-url http://localhost:8000 \
-	--request-items file://dynamodb/testdata/monster_ratings.json
+	--request-items file://dynamodb/testdata/local_monster_ratings.json
 
 # dynamodbにテストデータを投入する
-dynamodb-seed-test-data:
+dev-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
-	--request-items file://dynamodb/testdata/monster_ratings.json
+	--request-items file://dynamodb/testdata/dev_monster_ratings.json
+
+# dynamodbにテストデータを投入する
+prd-dynamodb-seed-test-data:
+	aws dynamodb batch-write-item \
+	--region ap-northeast-1 \
+	--request-items file://dynamodb/testdata/prd_monster_ratings.json
 
 # テストデータ取得
 local-dynamodb-scan:
