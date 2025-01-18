@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-var tableNameMonsterRatings string
+var tableNameMonsters string
 
 type Handler struct {
 	db *dynamodb.Client
@@ -15,7 +15,7 @@ type Handler struct {
 func NewHandler(db *dynamodb.Client) *Handler {
 	// とりあえずここで環境変数を読み込む
 	if v := os.Getenv("DYNAMODB_TABLE_NAME"); v != "" {
-		tableNameMonsterRatings = v
+		tableNameMonsters = v
 	}
 
 	return &Handler{db: db}

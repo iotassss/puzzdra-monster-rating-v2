@@ -42,17 +42,17 @@ Resources:
             Method: GET
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
-          DYNAMODB_TABLE_NAME: !Ref MonsterRatings
+          DYNAMODB_TABLE_NAME: !Ref Monsters
           MONSTER_SOURCE_DATA_JSON_URL: ""
           GAME8_MONSTER_URLS_FILE: ""
           AWS_SAM_LOCAL: ""
       Policies:
         - DynamoDBCrudPolicy:  # LambdaにDynamoDBへのアクセス権限を付与
-            TableName: !Ref MonsterRatings
-  MonsterRatings:
+            TableName: !Ref Monsters
+  Monsters:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "${Env}MonsterRatings"
+      TableName: !Sub "${Env}Monsters"
       AttributeDefinitions:
         - AttributeName: "No"
           AttributeType: S
@@ -76,4 +76,4 @@ Outputs:
     Value: !GetAtt GetMonsterRatingFunctionRole.Arn
   DynamoDBTableName:
     Description: "Name of the DynamoDB table created"
-    Value: !Ref MonsterRatings
+    Value: !Ref Monsters
