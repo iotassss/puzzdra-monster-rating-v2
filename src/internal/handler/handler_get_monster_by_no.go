@@ -11,7 +11,7 @@ func (h *Handler) GetMonsterByNoHandler(c *gin.Context) {
 	reqNo := c.Param("no")
 
 	ctx := c.Request.Context()
-	tableName := tableNameMonsterRatings
+	tableName := tableNameMonsters
 	result, err := h.db.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: &tableName,
 		Key: map[string]types.AttributeValue{

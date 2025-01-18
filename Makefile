@@ -34,7 +34,7 @@ local-invoke:
 # ローカルでDynamoDBを起動する
 local-dynamodb-table:
 	aws dynamodb create-table \
-		--table-name LocalMonsterRatings \
+		--table-name Monsters \
 		--attribute-definitions AttributeName=No,AttributeType=S \
 		--key-schema AttributeName=No,KeyType=HASH \
 		--provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
@@ -62,7 +62,7 @@ prd-dynamodb-seed-test-data:
 # テストデータ取得
 local-dynamodb-scan:
 	aws dynamodb scan \
-	--table-name MonsterRatings \
+	--table-name Monsters \
 	--region ap-northeast-1 \
 	--endpoint-url http://localhost:8000
 
