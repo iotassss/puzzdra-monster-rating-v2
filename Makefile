@@ -45,19 +45,19 @@ local-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
 	--endpoint-url http://localhost:8000 \
-	--request-items file://dynamodb/testdata/local_monster_ratings.json
+	--request-items file://dynamodb/testdata/local_monsters.json
 
 # dynamodbにテストデータを投入する
 dev-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
-	--request-items file://dynamodb/testdata/dev_monster_ratings.json
+	--request-items file://dynamodb/testdata/dev_monsters.json
 
 # dynamodbにテストデータを投入する
 prd-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
-	--request-items file://dynamodb/testdata/prd_monster_ratings.json
+	--request-items file://dynamodb/testdata/prd_monsters.json
 
 # テストデータ取得
 local-dynamodb-scan:
