@@ -8,13 +8,14 @@ import (
 	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/iotassss/puzzdra-monster-rating-v2/internal/handler"
+	"github.com/iotassss/puzzdra-monster-rating-v2/internal/repository"
 )
 
 func main() {
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*.html")
 
-	h := handler.NewHandler(newDynamoDBClient())
+	h := handler.NewHandler(repository.NewMonsterRepository())
 
 	r.GET("/hello", h.HelloHandler)
 	r.GET("/monsters/:no", h.GetMonsterByNoHandler)

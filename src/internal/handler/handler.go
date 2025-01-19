@@ -1,22 +1,13 @@
 package handler
 
 import (
-	"os"
-
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/iotassss/puzzdra-monster-rating-v2/internal/repository"
 )
 
-var tableNameMonsters string
-
 type Handler struct {
-	db *dynamodb.Client
+	monsterRepo *repository.MonsterRepository
 }
 
-func NewHandler(db *dynamodb.Client) *Handler {
-	// とりあえずここで環境変数を読み込む
-	if v := os.Getenv("DYNAMODB_TABLE_NAME"); v != "" {
-		tableNameMonsters = v
-	}
-
-	return &Handler{db: db}
+func NewHandler(monsterRepo *repository.MonsterRepository) *Handler {
+	return &Handler{monsterRepo: monsterRepo}
 }

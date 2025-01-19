@@ -1,49 +1,46 @@
 package handler
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) GetMonsterByNoHandler(c *gin.Context) {
 	reqNo := c.Param("no")
-
-	ctx := c.Request.Context()
-	tableName := tableNameMonsters
-	result, err := h.db.GetItem(ctx, &dynamodb.GetItemInput{
-		TableName: &tableName,
-		Key: map[string]types.AttributeValue{
-			"No": &types.AttributeValueMemberS{Value: reqNo},
-		},
-	})
-
+	no, err := strconv.Atoi(reqNo)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(500, gin.H{"error": "internal server error"})
 		return
 	}
-	if result.Item == nil {
+
+	ctx := c.Request.Context()
+
+	monster, err := h.monsterRepo.FindByNo(ctx, no)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal server error"})
+		return
+	}
+	if monster.No == 0 {
 		c.JSON(404, gin.H{"error": "monster not found"})
 		return
 	}
 
 	var outputScores []gin.H
-	for _, scores := range result.Item["Game8Scores"].(*types.AttributeValueMemberL).Value {
-		score := scores.(*types.AttributeValueMemberM).Value
+	for _, score := range monster.Game8Scores {
 		outputScores = append(outputScores, gin.H{
-			"Name":        score["Name"].(*types.AttributeValueMemberS).Value,
-			"LeaderPoint": score["LeaderPoint"].(*types.AttributeValueMemberS).Value,
-			"SubPoint":    score["SubPoint"].(*types.AttributeValueMemberS).Value,
-			"AssistPoint": score["AssistPoint"].(*types.AttributeValueMemberS).Value,
+			"Name":        score.Name,
+			"LeaderPoint": score.LeaderPoint,
+			"SubPoint":    score.SubPoint,
+			"AssistPoint": score.AssistPoint,
 		})
 	}
 	output := gin.H{
-		"No":   result.Item["No"].(*types.AttributeValueMemberS).Value,
-		"Name": result.Item["Name"].(*types.AttributeValueMemberS).Value,
+		"No":   monster.No,
+		"Name": monster.Name,
 		"Game8Monster": gin.H{
 			"Scores": outputScores,
-			"URL":    result.Item["Game8URL"].(*types.AttributeValueMemberS).Value,
+			"URL":    monster.Game8URL.String(),
 		},
 	}
 
