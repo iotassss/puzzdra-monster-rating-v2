@@ -28,32 +28,18 @@ func NewMonsterRepository() *MonsterRepository {
 	}
 }
 
-func (repo *MonsterRepository) FindByNo(ctx context.Context, no int) (entity.Monster, error) {
-	result, err := repo.client.GetItem(ctx, &dynamodb.GetItemInput{
-		TableName: &repo.tableName,
-		Key: map[string]types.AttributeValue{
-			"No": &types.AttributeValueMemberS{Value: fmt.Sprintf("%d", no)},
-		},
-	})
-	if err != nil {
-		return entity.Monster{}, err
-	}
-
-	if len(result.Item) == 0 {
+func DynamoDBOutputToEntity(dynamoDBOutput *dynamodb.GetItemOutput) (entity.Monster, error) {
+	dbMonster := dynamoDBOutput.Item
+	if len(dbMonster) == 0 {
 		return entity.Monster{}, nil
 	}
 
-	game8ScoresLen := len(result.Item["Game8Scores"].(*types.AttributeValueMemberL).Value)
-	game8Scores := make([]entity.Game8MonsterScore, 0, game8ScoresLen)
-
-	dbMonster := result.Item
-
-	noStr := dbMonster["No"].(*types.AttributeValueMemberS).Value
-	no, err = strconv.Atoi(noStr)
+	noStr := dbMonster["No"].(*types.AttributeValueMemberN).Value
+	no, err := strconv.Atoi(noStr)
 	if err != nil {
 		return entity.Monster{}, err
 	}
-	originMonsterNoStr := dbMonster["OriginMonsterNo"].(*types.AttributeValueMemberS).Value
+	originMonsterNoStr := dbMonster["OriginMonsterNo"].(*types.AttributeValueMemberN).Value
 	originMonsterNo, err := strconv.Atoi(originMonsterNoStr)
 	if err != nil {
 		return entity.Monster{}, err
@@ -65,6 +51,8 @@ func (repo *MonsterRepository) FindByNo(ctx context.Context, no int) (entity.Mon
 		return entity.Monster{}, err
 	}
 
+	game8ScoresLen := len(dbMonster["Game8Scores"].(*types.AttributeValueMemberL).Value)
+	game8Scores := make([]entity.Game8MonsterScore, 0, game8ScoresLen)
 	for _, scores := range dbMonster["Game8Scores"].(*types.AttributeValueMemberL).Value {
 		score := scores.(*types.AttributeValueMemberM).Value
 		game8Scores = append(game8Scores, entity.Game8MonsterScore{
@@ -84,6 +72,20 @@ func (repo *MonsterRepository) FindByNo(ctx context.Context, no int) (entity.Mon
 	}
 
 	return monster, nil
+}
+
+func (repo *MonsterRepository) FindByNo(ctx context.Context, no int) (entity.Monster, error) {
+	result, err := repo.client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: &repo.tableName,
+		Key: map[string]types.AttributeValue{
+			"No": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", no)},
+		},
+	})
+	if err != nil {
+		return entity.Monster{}, err
+	}
+
+	return DynamoDBOutputToEntity(result)
 }
 
 func (repo *MonsterRepository) Save(ctx context.Context, monster entity.Monster) error {

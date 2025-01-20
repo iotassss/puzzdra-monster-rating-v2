@@ -1,10 +1,10 @@
 {
-	"LocalMonsterRatings": [
+	"LocalMonsters": [
 		{
 			"PutRequest": {
 				"Item": {
 					"No": {
-						"S": "12345"
+						"N": "12345"
 					},
 					"Name": {
 						"S": "ルクシェオン"
@@ -42,7 +42,7 @@
 			"PutRequest": {
 				"Item": {
 					"No": {
-						"S": "12346"
+						"N": "12346"
 					},
 					"Name": {
 						"S": "ヴァルトランス"
