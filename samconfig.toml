@@ -30,6 +30,12 @@ warm_containers = "EAGER"
 [default.local_start_lambda.parameters]
 warm_containers = "EAGER"
 
+[local.deploy.parameters]
+parameter_overrides = ["Env=Local"]
+
+[local.local_invoke.parameters]
+parameter_overrides = ["Env=Local"]
+
 [dev.deploy.parameters]
 parameter_overrides = ["Env=Dev"]
 

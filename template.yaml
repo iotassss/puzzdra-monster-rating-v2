@@ -17,6 +17,7 @@ Parameters:
     AllowedValues:
       - Dev
       - Prd
+      - Local
 
 Resources:
   GetMonsterRatingFunction:
@@ -55,7 +56,7 @@ Resources:
       TableName: !Sub "${Env}Monsters"
       AttributeDefinitions:
         - AttributeName: "No"
-          AttributeType: S
+          AttributeType: "N"
       KeySchema:
         - AttributeName: "No"
           KeyType: HASH
