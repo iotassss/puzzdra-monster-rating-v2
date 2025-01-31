@@ -1,10 +1,10 @@
 {
-	"PrdMonsterRatings": [
+	"PrdMonsters": [
 		{
 			"PutRequest": {
 				"Item": {
 					"No": {
-						"S": "12345"
+						"N": "12345"
 					},
 					"Name": {
 						"S": "ルクシェオン"

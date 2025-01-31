@@ -34,8 +34,8 @@ local-invoke:
 # ローカルでDynamoDBを起動する
 local-dynamodb-table:
 	aws dynamodb create-table \
-		--table-name LocalMonsterRatings \
-		--attribute-definitions AttributeName=No,AttributeType=S \
+		--table-name LocalMonsters \
+		--attribute-definitions AttributeName=No,AttributeType=N \
 		--key-schema AttributeName=No,KeyType=HASH \
 		--provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
 		--endpoint-url http://localhost:8000
@@ -45,24 +45,31 @@ local-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
 	--endpoint-url http://localhost:8000 \
-	--request-items file://dynamodb/testdata/local_monster_ratings.json
+	--request-items file://dynamodb/testdata/local_monsters.json
 
 # dynamodbにテストデータを投入する
 dev-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
-	--request-items file://dynamodb/testdata/dev_monster_ratings.json
+	--request-items file://dynamodb/testdata/dev_monsters.json
 
 # dynamodbにテストデータを投入する
 prd-dynamodb-seed-test-data:
 	aws dynamodb batch-write-item \
 	--region ap-northeast-1 \
-	--request-items file://dynamodb/testdata/prd_monster_ratings.json
+	--request-items file://dynamodb/testdata/prd_monsters.json
 
 # テストデータ取得
 local-dynamodb-scan:
 	aws dynamodb scan \
-	--table-name MonsterRatings \
+	--table-name LocalMonsters \
+	--region ap-northeast-1 \
+	--endpoint-url http://localhost:8000
+
+# ローカルのDynamoDBを削除する
+local-dynamodb-delete-table:
+	aws dynamodb delete-table \
+	--table-name LocalMonsters \
 	--region ap-northeast-1 \
 	--endpoint-url http://localhost:8000
 
