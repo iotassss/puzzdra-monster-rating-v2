@@ -46,7 +46,7 @@ Resources:
           DYNAMODB_TABLE_NAME: !Ref Monsters
           MONSTER_SOURCE_DATA_JSON_URL: ""
           GAME8_MONSTER_URLS_FILE: ""
-          AWS_SAM_LOCAL: ""
+          AWS_SAM_LOCAL:
       Policies:
         - DynamoDBCrudPolicy:  # LambdaにDynamoDBへのアクセス権限を付与
             TableName: !Ref Monsters

@@ -9,11 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/iotassss/puzzdra-monster-rating-v2/internal/entity"
 )
 
 type MonsterRepository struct {
-	client    *dynamodb.Client
+	client    DynamoDBAPI
 	tableName string
 }
 
@@ -121,4 +122,99 @@ func (repo *MonsterRepository) Save(ctx context.Context, monster entity.Monster)
 	}
 
 	return nil
+}
+
+func (r *MonsterRepository) SaveAllMonsters(ctx context.Context, monsters []*entity.Monster) error {
+	const batchSize = 25 // DynamoDB BatchWriteItem supports up to 25 items per request
+
+	for i := 0; i < len(monsters); i += batchSize {
+		end := i + batchSize
+		if end > len(monsters) {
+			end = len(monsters)
+		}
+
+		batch := monsters[i:end]
+		if err := r.writeBatch(ctx, batch); err != nil {
+			return fmt.Errorf("failed to save batch %d-%d: %w", i, end, err)
+		}
+	}
+
+	return nil
+}
+
+func (r *MonsterRepository) writeBatch(ctx context.Context, batch []*entity.Monster) error {
+	writeRequests := make([]types.WriteRequest, len(batch))
+	for i, monster := range batch {
+		game8Scores := make([]types.AttributeValue, 0, len(monster.Game8Scores))
+		for _, score := range monster.Game8Scores {
+			game8Scores = append(game8Scores, &types.AttributeValueMemberM{
+				Value: map[string]types.AttributeValue{
+					"Name":        &types.AttributeValueMemberS{Value: score.Name},
+					"LeaderPoint": &types.AttributeValueMemberS{Value: score.LeaderPoint},
+					"SubPoint":    &types.AttributeValueMemberS{Value: score.SubPoint},
+					"AssistPoint": &types.AttributeValueMemberS{Value: score.AssistPoint},
+				},
+			})
+		}
+		monsterItem := map[string]types.AttributeValue{
+			"No":   &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", monster.No)},
+			"Name": &types.AttributeValueMemberS{Value: monster.Name},
+			"OriginMonsterNo": &types.AttributeValueMemberN{
+				Value: fmt.Sprintf("%d", monster.OriginMonsterNo),
+			},
+			"Game8URL": &types.AttributeValueMemberS{Value: monster.Game8URL.String()},
+			"Game8Scores": &types.AttributeValueMemberL{
+				Value: game8Scores,
+			},
+			"BatchProcessStatus": &types.AttributeValueMemberN{Value: "1"},
+		}
+
+		writeRequests[i] = types.WriteRequest{
+			PutRequest: &types.PutRequest{
+				Item: monsterItem,
+			},
+		}
+	}
+
+	input := &dynamodb.BatchWriteItemInput{
+		RequestItems: map[string][]types.WriteRequest{
+			r.tableName: writeRequests,
+		},
+	}
+
+	_, err := r.client.BatchWriteItem(ctx, input)
+	return err
+}
+
+func (r *MonsterRepository) ScanAll(ctx context.Context) ([]*entity.Monster, error) {
+	var items []*entity.Monster
+	var lastEvaluatedKey map[string]types.AttributeValue
+
+	for {
+		// スキャンリクエスト
+		output, err := r.client.Scan(ctx, &dynamodb.ScanInput{
+			TableName:         aws.String(r.tableName),
+			ExclusiveStartKey: lastEvaluatedKey,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan items: %w", err)
+		}
+
+		// レスポンスからエンティティに変換
+		for _, item := range output.Items {
+			monster, err := DynamoDBOutputToEntity(&dynamodb.GetItemOutput{Item: item})
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert item: %w", err)
+			}
+			items = append(items, &monster)
+		}
+
+		// LastEvaluatedKeyが存在しない場合、終了
+		if output.LastEvaluatedKey == nil {
+			break
+		}
+		lastEvaluatedKey = output.LastEvaluatedKey
+	}
+
+	return items, nil
 }

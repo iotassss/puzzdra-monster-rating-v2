@@ -19,15 +19,16 @@ type GamewithMonster struct {
 }
 
 type Monster struct {
-	No              int
-	Name            string
-	OriginMonsterNo int
-	Game8URL        *url.URL
-	Game8Scores     []Game8MonsterScore
+	No                 int
+	Name               string
+	OriginMonsterNo    int
+	Game8URL           *url.URL
+	Game8Scores        []Game8MonsterScore
+	BatchProcessStatus int
 }
 
 type MonsterSourceData struct {
 	No     int
 	Name   string
-	BaseNo int
+	BaseNo *int
 }

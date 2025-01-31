@@ -16,14 +16,21 @@ func newDynamoDBClient() *dynamodb.Client {
 	var err error
 
 	// 環境変数でローカル実行かどうかを判定
-	if os.Getenv("AWS_SAM_LOCAL") == "true" {
+	isLocal := os.Getenv("AWS_SAM_LOCAL") == "true"
+	isMonsterBatch := os.Getenv("MONSTER_BATCH") == "true"
+	if isLocal {
 		// ローカルDynamoDB Local用の設定
 		cfg, err = config.LoadDefaultConfig(context.TODO(),
 			config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 				if service == dynamodb.ServiceID {
+					var url string
+					if isMonsterBatch {
+						url = "http://localhost:8000"
+					} else {
+						url = "http://host.docker.internal:8000"
+					}
 					return aws.Endpoint{
-						URL: "http://host.docker.internal:8000", // Dockerで起動したDynamoDB Localを指す
-						// URL:           "http://localhost:8000", // Dockerで起動したDynamoDB Localを指す
+						URL:           url,
 						SigningRegion: "ap-northeast-1",
 					}, nil
 				}

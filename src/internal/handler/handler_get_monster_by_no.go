@@ -1,16 +1,19 @@
 package handler
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/iotassss/puzzdra-monster-rating-v2/internal/entity"
 )
 
 func (h *Handler) GetMonsterByNoHandler(c *gin.Context) {
 	reqNo := c.Param("no")
 	no, err := strconv.Atoi(reqNo)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "internal server error"})
+		log.Println(err)
+		c.JSON(400, gin.H{"error": "invalid monster no"})
 		return
 	}
 
@@ -18,6 +21,7 @@ func (h *Handler) GetMonsterByNoHandler(c *gin.Context) {
 
 	monster, err := h.monsterRepo.FindByNo(ctx, no)
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, gin.H{"error": "internal server error"})
 		return
 	}
@@ -26,6 +30,10 @@ func (h *Handler) GetMonsterByNoHandler(c *gin.Context) {
 		return
 	}
 
+	c.HTML(200, "monster.html", presentMonsterRating(monster))
+}
+
+func presentMonsterRating(monster entity.Monster) gin.H {
 	var outputScores []gin.H
 	for _, score := range monster.Game8Scores {
 		outputScores = append(outputScores, gin.H{
@@ -43,6 +51,5 @@ func (h *Handler) GetMonsterByNoHandler(c *gin.Context) {
 			"URL":    monster.Game8URL.String(),
 		},
 	}
-
-	c.HTML(200, "monster.html", output)
+	return output
 }
