@@ -66,6 +66,13 @@ local-dynamodb-scan:
 	--region ap-northeast-1 \
 	--endpoint-url http://localhost:8000
 
+# テストデータ取得
+prd-dynamodb-scan:
+	aws dynamodb scan \
+	--table-name PrdMonsters \
+	--region ap-northeast-1 \
+	--endpoint-url https://dynamodb.ap-northeast-1.amazonaws.com
+
 # ローカルのDynamoDBを削除する
 local-dynamodb-delete-table:
 	aws dynamodb delete-table \
