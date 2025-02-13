@@ -19,7 +19,7 @@ func main() {
 	os.Setenv("FAILED_GAME8_MONSTER_URL_LIST_FILE_PATH", "data/failed_game8_monster_urls.txt")
 	os.Setenv("MONSTER_SOURCE_DATA_JSON_URL", "https://padmdb.rainbowsite.net/listJson/monster_data.json")
 
-	batch := batch.NewBatch(repository.NewMonsterRepository())
+	batch := batch.NewBatch(repository.NewMonsterRepository(), nil)
 
 	fetchMonsterJSON := flag.Bool("fetchmonsterjson", false, "fetch monster json")
 	collectGame8MonsterURLs := flag.Bool("collectgame8monsterurls", false, "collect game8 monster urls")

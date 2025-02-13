@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -25,6 +26,17 @@ func NewMonsterRepository() *MonsterRepository {
 
 	return &MonsterRepository{
 		client:    client,
+		tableName: tableNameMonsters,
+	}
+}
+
+func NewMonsterRepositoryWithRemoteDB() *MonsterRepository {
+	remoteDBClient := newRemoteDynamoDBClient()
+
+	tableNameMonsters := os.Getenv("DYNAMODB_TABLE_NAME_REMOTE")
+
+	return &MonsterRepository{
+		client:    remoteDBClient,
 		tableName: tableNameMonsters,
 	}
 }
@@ -176,14 +188,36 @@ func (r *MonsterRepository) writeBatch(ctx context.Context, batch []*entity.Mons
 		}
 	}
 
-	input := &dynamodb.BatchWriteItemInput{
-		RequestItems: map[string][]types.WriteRequest{
-			r.tableName: writeRequests,
-		},
+	maxRetries := 5
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if len(writeRequests) == 0 {
+			return nil
+		}
+
+		input := &dynamodb.BatchWriteItemInput{
+			RequestItems: map[string][]types.WriteRequest{
+				r.tableName: writeRequests,
+			},
+		}
+
+		out, err := r.client.BatchWriteItem(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		// 失敗したアイテムを再試行
+		writeRequests = out.UnprocessedItems[r.tableName]
+
+		// すべて成功したら終了
+		if len(writeRequests) == 0 {
+			return nil
+		}
+
+		// バックオフを入れる (指数バックオフなどを検討)
+		time.Sleep(time.Duration(attempt*100) * time.Millisecond)
 	}
 
-	_, err := r.client.BatchWriteItem(ctx, input)
-	return err
+	return fmt.Errorf("batch write failed after %d attempts", maxRetries)
 }
 
 func (r *MonsterRepository) ScanAll(ctx context.Context) ([]*entity.Monster, error) {

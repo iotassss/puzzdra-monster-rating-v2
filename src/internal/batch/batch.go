@@ -14,13 +14,17 @@ const (
 
 type Batch struct {
 	monsterRepo                       *repository.MonsterRepository
+	monsterRemoteRepo                 *repository.MonsterRepository
 	monsterDataJsonFilePath           string
 	game8MonsterURLListFilePath       string
 	failedGame8MonsterURLListFilePath string
 	monsterSourceDataJsonURL          string
 }
 
-func NewBatch(monsterRepo *repository.MonsterRepository) *Batch {
+func NewBatch(
+	monsterRepo *repository.MonsterRepository,
+	monsterRemoteRepo *repository.MonsterRepository,
+) *Batch {
 	monsterDataJsonFilePath := os.Getenv("MONSTER_DATA_JSON_FILE_PATH")
 	game8MonsterURLListFilePath := os.Getenv("GAME8_MONSTER_URL_LIST_FILE_PATH")
 	failedGame8MonsterURLListFilePath := os.Getenv("FAILED_GAME8_MONSTER_URL_LIST_FILE_PATH")
@@ -28,6 +32,7 @@ func NewBatch(monsterRepo *repository.MonsterRepository) *Batch {
 
 	return &Batch{
 		monsterRepo:                       monsterRepo,
+		monsterRemoteRepo:                 monsterRemoteRepo,
 		monsterDataJsonFilePath:           monsterDataJsonFilePath,
 		game8MonsterURLListFilePath:       game8MonsterURLListFilePath,
 		failedGame8MonsterURLListFilePath: failedGame8MonsterURLListFilePath,
