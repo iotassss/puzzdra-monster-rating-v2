@@ -50,3 +50,23 @@ func newDynamoDBClient() *dynamodb.Client {
 
 	return dynamodb.NewFromConfig(cfg)
 }
+
+func newRemoteDynamoDBClient() *dynamodb.Client {
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+			if service == dynamodb.ServiceID {
+				return aws.Endpoint{
+					URL:           "https://dynamodb.ap-northeast-1.amazonaws.com",
+					SigningRegion: "ap-northeast-1",
+				}, nil
+			}
+			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+		})),
+	)
+
+	if err != nil {
+		log.Fatalf("unable to load SDK config, %v", err)
+	}
+
+	return dynamodb.NewFromConfig(cfg)
+}
